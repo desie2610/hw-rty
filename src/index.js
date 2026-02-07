@@ -7,43 +7,44 @@ const inputRef = document.querySelector('.country-input');
 const infoRef = document.querySelector('.country-info');
 const listRef = document.querySelector('.country-list');
 
-const BASE_URL = 'https://restcountries.com/v2/name/';
+const BASE_URL = 'https://restcountries.com/v3.1/name/';
 
 inputRef.addEventListener('input', debounce(onSearch, 500));
 
 function onSearch(e) {
-  const searchQuery = e.target.value.trim();
+  const query = e.target.value.trim();
 
   clearMarkup();
-  if (!searchQuery) return;
+  if (!query) return;
 
-  fetchCountries(searchQuery)
+  fetchCountries(query)
     .then(handleCountries)
     .catch(() => {
       error({
-        text: 'Country not found',
+        text: 'Країна не знайдена!!!',
       });
     });
 }
 
-function fetchCountries(searchQuery) {
-  return fetch(`${BASE_URL}${searchQuery}`).then(response => {
-    if (!response.ok) {
-      throw new Error(response.status);
-    }
-    return response.json();
-  });
+function fetchCountries(query) {
+  return fetch(`${BASE_URL}${query}`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(response.status);
+      }
+      return response.json();
+    });
 }
 
 function handleCountries(countries) {
   if (countries.length > 10) {
     notice({
-      text: 'Too many matches found. Please enter a more specific query!',
+      text: 'Дуже багато варіантів введіть більше літер!',
     });
     return;
   }
 
-  if (countries.length >= 2) {
+  if (countries.length > 1) {
     renderCountryList(countries);
     return;
   }
@@ -53,14 +54,18 @@ function handleCountries(countries) {
 
 function renderCountryList(countries) {
   const markup = countries
-    .map(country => `<li>${country.name}</li>`)
+    .map(country => `<li>${country.name.common}</li>`)
     .join('');
 
   listRef.innerHTML = markup;
 }
 
 function renderCountryInfo(country) {
-  const { name, capital, population, languages, flag } = country;
+  const name = country.name.common;
+  const capital = country.capital?.[0] || '—';
+  const population = country.population;
+  const languages = Object.values(country.languages || {});
+  const flag = country.flags.svg;
 
   const markup = `
     <h2>${name}</h2>
@@ -68,9 +73,9 @@ function renderCountryInfo(country) {
     <p><b>Population:</b> ${population}</p>
     <p><b>Languages:</b></p>
     <ul>
-      ${languages.map(lang => `<li>${lang.name}</li>`).join('')}
+      ${languages.map(lang => `<li>${lang}</li>`).join('')}
     </ul>
-    <img src="${flag}" alt="Flag of ${name}" width="150"/>
+    <img src="${flag}" alt="Flag of ${name}" width="150" />
   `;
 
   infoRef.innerHTML = markup;
@@ -80,5 +85,3 @@ function clearMarkup() {
   infoRef.innerHTML = '';
   listRef.innerHTML = '';
 }
-
-// /===================
