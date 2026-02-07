@@ -723,20 +723,20 @@ var _brightThemeCss = require("@pnotify/core/dist/BrightTheme.css");
 const inputRef = document.querySelector('.country-input');
 const infoRef = document.querySelector('.country-info');
 const listRef = document.querySelector('.country-list');
-const BASE_URL = 'https://restcountries.com/v2/name/';
+const BASE_URL = 'https://restcountries.com/v3.1/name/';
 inputRef.addEventListener('input', (0, _lodashDebounceDefault.default)(onSearch, 500));
 function onSearch(e) {
-    const searchQuery = e.target.value.trim();
+    const query = e.target.value.trim();
     clearMarkup();
-    if (!searchQuery) return;
-    fetchCountries(searchQuery).then(handleCountries).catch(()=>{
+    if (!query) return;
+    fetchCountries(query).then(handleCountries).catch(()=>{
         (0, _core.error)({
-            text: 'Country not found'
+            text: "\u041A\u0440\u0430\u0457\u043D\u0430 \u043D\u0435 \u0437\u043D\u0430\u0439\u0434\u0435\u043D\u0430!!!"
         });
     });
 }
-function fetchCountries(searchQuery) {
-    return fetch(`${BASE_URL}${searchQuery}`).then((response)=>{
+function fetchCountries(query) {
+    return fetch(`${BASE_URL}${query}`).then((response)=>{
         if (!response.ok) throw new Error(response.status);
         return response.json();
     });
@@ -744,31 +744,35 @@ function fetchCountries(searchQuery) {
 function handleCountries(countries) {
     if (countries.length > 10) {
         (0, _core.notice)({
-            text: 'Too many matches found. Please enter a more specific query!'
+            text: "\u0414\u0443\u0436\u0435 \u0431\u0430\u0433\u0430\u0442\u043E \u0432\u0430\u0440\u0456\u0430\u043D\u0442\u0456\u0432 \u0432\u0432\u0435\u0434\u0456\u0442\u044C \u0431\u0456\u043B\u044C\u0448\u0435 \u043B\u0456\u0442\u0435\u0440!"
         });
         return;
     }
-    if (countries.length >= 2) {
+    if (countries.length > 1) {
         renderCountryList(countries);
         return;
     }
     renderCountryInfo(countries[0]);
 }
 function renderCountryList(countries) {
-    const markup = countries.map((country)=>`<li>${country.name}</li>`).join('');
+    const markup = countries.map((country)=>`<li>${country.name.common}</li>`).join('');
     listRef.innerHTML = markup;
 }
 function renderCountryInfo(country) {
-    const { name, capital, population, languages, flag } = country;
+    const name = country.name.common;
+    const capital = country.capital?.[0] || "\u2014";
+    const population = country.population;
+    const languages = Object.values(country.languages || {});
+    const flag = country.flags.svg;
     const markup = `
     <h2>${name}</h2>
     <p><b>Capital:</b> ${capital}</p>
     <p><b>Population:</b> ${population}</p>
     <p><b>Languages:</b></p>
     <ul>
-      ${languages.map((lang)=>`<li>${lang.name}</li>`).join('')}
+      ${languages.map((lang)=>`<li>${lang}</li>`).join('')}
     </ul>
-    <img src="${flag}" alt="Flag of ${name}" width="150"/>
+    <img src="${flag}" alt="Flag of ${name}" width="150" />
   `;
     infoRef.innerHTML = markup;
 }
