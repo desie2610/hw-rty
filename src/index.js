@@ -80,3 +80,5 @@ function clearMarkup() {
   infoRef.innerHTML = '';
   listRef.innerHTML = '';
 }
+
+// /===================
